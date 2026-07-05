@@ -2,7 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:go_router/go_router.dart';
+
 
 // Import komponen internal fitur News
 import '../../features/news/data/datasources/news_local_data_source.dart';
