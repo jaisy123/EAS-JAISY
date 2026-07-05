@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../domain/entities/news_entity.dart';
+import '../bloc/news_bloc.dart';
 
 class NewsHomePage extends StatelessWidget {
   final List<NewsEntity> newsList;
@@ -16,7 +18,7 @@ class NewsHomePage extends StatelessWidget {
     // Ambil berita pertama sebagai Headline teratas
     final headline = newsList.first;
 
-    // PERBAIKAN 1: Buat list baru untuk daftar bawah yang mengecualikan berita pertama (Headline)
+    // Pengecualian berita pertama (Headline) agar tidak duplikat di list bawah
     final remainingNews = newsList.skip(1).toList();
 
     return ListView(
@@ -31,17 +33,24 @@ class NewsHomePage extends StatelessWidget {
 
         // 1. HEADLINE CARD
         GestureDetector(
-          onTap: () => context.push('/detail', extra: headline),
+          // PERBAIKAN 1: Mengirim paket Map berisi data dan BLoc aktif agar sinkron dengan AppRouter
+          onTap: () => context.push(
+            '/detail',
+            extra: {
+              'news': headline,
+              'bloc': BlocProvider.of<NewsBloc>(context),
+            },
+          ),
           child: Container(
             width: double.infinity,
-            height: 200, // PERBAIKAN 2: Berikan tinggi pasti agar kartu proporsional
+            height: 200, 
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               image: DecorationImage(
                 image: NetworkImage(headline.imageUrl),
                 fit: BoxFit.cover,
                 colorFilter: ColorFilter.mode(
-                  Colors.black.withValues(alpha: 0.5), // Menggunakan metode alpha modern
+                  Colors.black.withValues(alpha: 0.5), 
                   BlendMode.darken,
                 ),
               ),
@@ -49,7 +58,7 @@ class NewsHomePage extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end, // Membawa konten teks ke area bawah kartu
+              mainAxisAlignment: MainAxisAlignment.end, 
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -87,12 +96,19 @@ class NewsHomePage extends StatelessWidget {
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: remainingNews.length, // Menggunakan list yang sudah di-filter
+            itemCount: remainingNews.length, 
             separatorBuilder: (context, index) => const Divider(height: 24),
             itemBuilder: (context, index) {
               final item = remainingNews[index];
               return GestureDetector(
-                onTap: () => context.push('/detail', extra: item),
+                // PERBAIKAN 2: Mengirim paket Map yang sama untuk daftar list rekomendasi bawah
+                onTap: () => context.push(
+                  '/detail',
+                  extra: {
+                    'news': item,
+                    'bloc': BlocProvider.of<NewsBloc>(context),
+                  },
+                ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -128,7 +144,6 @@ class NewsHomePage extends StatelessWidget {
                         height: 70, 
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
-                          // Fallback jika gambar dari NewsAPI gagal dimuat/broken link
                           return Container(
                             width: 90,
                             height: 70,

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../domain/entities/news_entity.dart';
+import '../bloc/news_bloc.dart'; // Pastikan path impor ini sesuai dengan struktur proyek Anda
 
 class NewsBookmarksPage extends StatelessWidget {
   final List<NewsEntity> bookmarks;
@@ -11,7 +13,7 @@ class NewsBookmarksPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Info Banner Offline Khas Gambar 4
+        // Info Banner Offline
         Container(
           width: double.infinity,
           color: const Color(0xFFC2410C),
@@ -23,7 +25,12 @@ class NewsBookmarksPage extends StatelessWidget {
               SizedBox(width: 6),
               Text(
                 "TERSEDIA UNTUK BACA OFFLINE",
-                style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                style: TextStyle(
+                  color: Colors.white, 
+                  fontSize: 11, 
+                  fontWeight: FontWeight.bold, 
+                  letterSpacing: 0.5,
+                ),
               ),
             ],
           ),
@@ -44,7 +51,16 @@ class NewsBookmarksPage extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final item = bookmarks[index];
                     return GestureDetector(
-                      onTap: () => context.push('/detail', extra: item),
+                      // PERBAIKAN: Mengirim Map berisi data berita dan instance BLoc aktif lewat GoRouter extra
+                      onTap: () {
+                        context.push(
+                          '/detail',
+                          extra: {
+                            'news': item,
+                            'bloc': BlocProvider.of<NewsBloc>(context),
+                          },
+                        );
+                      },
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -71,7 +87,11 @@ class NewsBookmarksPage extends StatelessWidget {
                           const SizedBox(height: 8),
                           Text(
                             item.category.toUpperCase(),
-                            style: const TextStyle(color: Color(0xFFC2410C), fontSize: 11, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              color: Color(0xFFC2410C), 
+                              fontSize: 11, 
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -79,7 +99,6 @@ class NewsBookmarksPage extends StatelessWidget {
                             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 6),
-                          // Menggunakan Material Icon asli agar tampilan lebih konsisten di semua device
                           Row(
                             children: [
                               Icon(Icons.access_time, size: 12, color: Colors.grey.shade600),
