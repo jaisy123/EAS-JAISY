@@ -1,34 +1,50 @@
 allprojects {
     repositories {
         google()
-        central()
+        mavenCentral()
     }
 }
 
-val newBuildDir: Directory =
-    rootProject.layout.buildDirectory
-        .dir("../../build")
-        .get()
-rootProject.layout.buildDirectory.value(newBuildDir)
+val sharedBuildDir = rootProject.layout.buildDirectory.dir("../../build").get().asFile
+rootProject.layout.buildDirectory.set(sharedBuildDir)
 
 subprojects {
-    val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
-    project.layout.buildDirectory.value(newSubprojectBuildDir)
-}
+    // 1. Mengatur direktori build bersama untuk setiap subproyek
+    project.layout.buildDirectory.set(sharedBuildDir.resolve(project.name))
+    
+    // ==============================================================================
+    // PERBAIKAN UTAMA KOTLIN DSL: Pemaksaan Resolusi Dependensi untuk Semua Subproyek
+    // ==============================================================================
+    project.configurations.configureEach {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "androidx.core" && requested.name == "core") {
+                useVersion("1.13.1")
+            }
+            if (requested.group == "androidx.core" && requested.name == "core-ktx") {
+                useVersion("1.13.1")
+            }
+        }
+    }
 
-subprojects {
-    project.evaluationDependsOn(":app")
-}
-
-// === TAMBAHKAN BLOK INI DI PALING BAWAH DEN! ===
-// Logika ini mendeteksi jika ada plugin isar yang rewel, lalu otomatis menyuntikkan namespace agar AGP baru tidak protes
-subprojects {
+    // 2. Menyuntikkan namespace & menyamakan SDK compile setelah subproyek dievaluasi
     afterEvaluate {
-        if (project.plugins.hasPlugin("com.android.library")) {
-            val androidExtension = project.extensions.findByName("android") as? com.android.build.gradle.LibraryExtension
-            if (androidExtension != null && androidExtension.namespace == null) {
-                // Menyuntikkan namespace darurat berdasarkan nama projectnya (menyelamatkan isar_flutter_libs)
-                androidExtension.namespace = "dev.isar.${project.name.replace("-", "_")}"
+        // Khusus menangani isu namespace pada isar_flutter_libs
+        if (project.name == "isar_flutter_libs") {
+            extensions.findByName("android")?.let { androidExt ->
+                val baseExt = androidExt as? com.android.build.gradle.BaseExtension
+                if (baseExt?.namespace == null) {
+                    baseExt?.namespace = "dev.isar.isar_flutter_libs"
+                }
+            }
+        }
+        
+        // Memaksa subproyek menggunakan compileSdk 36 agar sinkron dengan shared_preferences_android
+        if (plugins.hasPlugin("com.android.application") || plugins.hasPlugin("com.android.library")) {
+            extensions.findByType<com.android.build.gradle.BaseExtension>()?.apply {
+                compileSdkVersion(36)
+                defaultConfig {
+                    targetSdkVersion(36)
+                }
             }
         }
     }

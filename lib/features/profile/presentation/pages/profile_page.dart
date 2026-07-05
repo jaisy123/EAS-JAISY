@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lottie/lottie.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -8,33 +9,60 @@ class ProfilePage extends StatefulWidget {
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin {
   final String _originalNpm = "20123066";
   final String _email = "jaisy.20123066@utdi.ac.id";
   
   static const _platform = MethodChannel('com.jaisy.eas/npm');
   
-  String _reversedNpmFromNative = "Memuat..."; 
+  String _reversedNpmFromNative = ""; 
   int _profileTapCount = 0;
+  
+  late final AnimationController _lottieController;
+  bool _isHighlighted = false; 
 
   @override
   void initState() {
-    // PERBAIKAN 1: Memperbaiki panggilan super yang benar dari super.override() ke super.initState()
     super.initState();
-    _fetchNpmFromNative(); 
+    _lottieController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+    
+    _lottieController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        setState(() {
+          _isHighlighted = false;
+        });
+      }
+    });
   }
 
-  Future<void> _fetchNpmFromNative() async {
+  @override
+  void dispose() {
+    _lottieController.dispose(); 
+    super.dispose();
+  }
+
+  Future<void> _handleReverseNpmAction() async {
     try {
       final String result = await _platform.invokeMethod('reverseNpmNative', {
         'npm': _originalNpm,
       });
+      
+      if (!mounted) return;
+      
       setState(() {
         _reversedNpmFromNative = result;
       });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("NPM Berhasil Dibalik lewat Kotlin Native!")),
+      );
     } catch (e) {
+      if (!mounted) return;
       setState(() {
-        _reversedNpmFromNative = "Gagal memuat native";
+        _reversedNpmFromNative = "Error Native";
       });
     }
   }
@@ -45,51 +73,12 @@ class _ProfilePageState extends State<ProfilePage> {
     });
 
     if (_profileTapCount == 6) {
-      _showAcademicEasterEgg();
-      _profileTapCount = 0;
+      setState(() {
+        _isHighlighted = true; 
+      });
+      _lottieController.forward(from: 0.0);
+      _profileTapCount = 0; 
     }
-  }
-
-  void _showAcademicEasterEgg() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Row(
-            children: [
-              Icon(Icons.verified_user, color: Color(0xFF1E3A8A)),
-              SizedBox(width: 8),
-              Text("Verifikasi Orisinalitas", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          content: const Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Aplikasi ini dikembangkan sepenuhnya oleh:",
-                style: TextStyle(fontSize: 13, color: Colors.grey),
-              ),
-              SizedBox(height: 12),
-              Text(
-                "Muhamad Jaisy Hisbulloh",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFFC2410C)),
-              ),
-              SizedBox(height: 6),
-              Text("NPM: 20123066", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-              Text("Logika Pembalik: Android Native (Kotlin)", style: TextStyle(fontSize: 12, color: Colors.grey)),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text("Konfirmasi", style: TextStyle(color: Color(0xFF1E3A8A), fontWeight: FontWeight.bold)),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
@@ -97,65 +86,98 @@ class _ProfilePageState extends State<ProfilePage> {
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
+        const SizedBox(height: 20),
+        
+        // AREA FOTO PROFIL + LAYER LOTTIE
         Center(
           child: Column(
             children: [
               GestureDetector(
                 onTap: _handleProfileTap,
                 child: Stack(
-                  alignment: Alignment.bottomRight,
+                  alignment: Alignment.center, 
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFF1E3A8A), width: 2),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.network(
-                          "https://picsum.photos/id/91/150/150",
-                          width: 100,
-                          height: 100,
-                          fit: BoxFit.cover,
-                        ),
+                    CircleAvatar(
+                      radius: 55,
+                      backgroundColor: const Color(0xFF1E3A8A).withValues(alpha: 0.1),
+                      child: const Icon(
+                        Icons.person,
+                        size: 65,
+                        color: Color(0xFF1E3A8A),
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: const BoxDecoration(color: Color(0xFFC2410C), shape: BoxShape.circle),
-                      child: const Icon(Icons.fingerprint, color: Colors.white, size: 14),
-                    )
+                    if (_isHighlighted)
+                      IgnorePointer( 
+                        child: AnimatedScale(
+                          duration: const Duration(milliseconds: 300),
+                          scale: 1.6, 
+                          child: SizedBox(
+                            width: 150,
+                            height: 150,
+                            child: Lottie.network(
+                              'https://assets9.lottiefiles.com/packages/lf20_jbrw3hcz.json',
+                              controller: _lottieController,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
-              // PERBAIKAN 2: Mengubah textAlign: Center menjadi TextAlign.center yang sah
-              const Text(
+              const SizedBox(height: 20),
+              
+              // PERBAIKAN 1: Pengaturan nama dibersihkan dari const parsial yang bentrok
+              Text(
                 "Muhamad Jaisy Hisbulloh",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A)),
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A)),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
+              
               Text(
-                "NPM Terbalik (Native): $_reversedNpmFromNative",
-                style: const TextStyle(color: Color(0xFFC2410C), fontSize: 14, fontWeight: FontWeight.bold),
+                "NPM: $_originalNpm",
+                style: const TextStyle(color: Colors.grey, fontSize: 14),
               ),
+              const SizedBox(height: 4),
+
+              // PERBAIKAN 2: Mengubah FontWeight.black menjadi FontWeight.w900 agar valid konstan
+              if (_reversedNpmFromNative.isNotEmpty) ...[
+                Text(
+                  _reversedNpmFromNative, 
+                  style: const TextStyle(
+                    color: Color(0xFFC2410C), 
+                    fontSize: 20, 
+                    fontWeight: FontWeight.w900, 
+                    letterSpacing: 1.0,
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // TOMBOL EKSEKUSI NATIVE KOTLIN
+              ElevatedButton.icon(
+                onPressed: _handleReverseNpmAction,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1E3A8A),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                ),
+                icon: const Icon(Icons.swap_horizontal_circle_outlined, size: 18),
+                label: const Text("Balik NPM via Kotlin", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+              ),
+              
+              const SizedBox(height: 12),
               Text(_email, style: const TextStyle(color: Colors.grey, fontSize: 13)),
             ],
           ),
         ),
-        const SizedBox(height: 24),
-        Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: _buildStatItems()),
         const SizedBox(height: 32),
-        const Text("PENGATURAN AKUN", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A), letterSpacing: 0.5)),
-        const SizedBox(height: 12),
-        _buildListTile(Icons.notifications_none, "Notifikasi"),
-        _buildThemeTile(context),
-        _buildListTile(Icons.language, "Bahasa", trailingText: "Indonesia"),
-        _buildListTile(Icons.security, "Kebijakan Privasi"),
-        _buildListTile(Icons.logout, "Keluar", textColor: Colors.red),
-        const SizedBox(height: 40),
+        
+        Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: _buildStatItems()),
+        const SizedBox(height: 60),
+        
         Center(
           child: Text(
             "DigiNews v1.0.0 (NPM 66)\n© 2026 Authority of Information",
@@ -168,7 +190,15 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   List<Widget> _buildStatItems() => [_statCard("124", "Simpan"), _statCard("48", "Komentar"), _statCard("Premium", "Status", isSpecial: true)];
-  Widget _statCard(String value, String label, {bool isSpecial = false}) => Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(8)), child: Column(children: [Text(value, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: isSpecial ? const Color(0xFF1E3A8A) : Colors.black)), Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey))]));
-  Widget _buildListTile(IconData icon, String title, {String? trailingText, Color? textColor}) => ListTile(contentPadding: EdgeInsets.zero, leading: Icon(icon, color: textColor ?? const Color(0xFF1E3A8A)), title: Text(title, style: TextStyle(fontSize: 14, color: textColor)), trailing: trailingText != null ? Text(trailingText, style: const TextStyle(color: Colors.grey, fontSize: 13)) : const Icon(Icons.chevron_right, color: Colors.grey, size: 18));
-  Widget _buildThemeTile(BuildContext context) { final isDark = Theme.of(context).brightness == Brightness.dark; return ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.dark_mode_outlined, color: Color(0xFF1E3A8A)), title: const Text("Tema", style: TextStyle(fontSize: 14)), subtitle: Text(isDark ? "Gelap (Flavor PROD)" : "Terang (Flavor DEV)", style: const TextStyle(fontSize: 11)), trailing: Switch(value: isDark, onChanged: (_) {})); }
+  
+  Widget _statCard(String value, String label, {bool isSpecial = false}) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14), 
+    decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(8)), 
+    child: Column(
+      children: [
+        Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isSpecial ? const Color(0xFF1E3A8A) : Colors.black)), 
+        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey))
+      ]
+    )
+  );
 }
