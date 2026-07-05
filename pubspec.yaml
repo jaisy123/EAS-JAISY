@@ -1,0 +1,47 @@
+name: eas_mpl_jaisy
+description: "A new Flutter project for EAS Mobile Programming Lanjut."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  
+  # State Management (BLoC Pattern)
+  flutter_bloc: ^8.1.3
+  
+  # Alat Bantu Banding Objek & Dependency Injection (DI)
+  equatable: ^2.0.5
+  get_it: ^7.6.0
+  
+  # Database Lokal Offline-First (Isar)
+  isar: ^3.1.0+1
+  isar_flutter_libs: ^3.1.0+1
+  path_provider: ^2.1.1
+  
+  # Fitur Share Berita & Navigasi Terstruktur
+  share_plus: ^7.2.1
+  go_router: ^13.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+  
+  # Generator Kode Otomatis untuk Isar Database
+  isar_generator: ^3.1.0+1
+  build_runner: ^2.4.8
+
+flutter:
+  uses-material-design: true
+
+  # Registrasi aset gambar placeholder atau ikon jika diperlukan di kemudian hari
+  # assets:
+  #   - assets/images/
