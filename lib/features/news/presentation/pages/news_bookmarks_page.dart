@@ -31,7 +31,12 @@ class NewsBookmarksPage extends StatelessWidget {
         
         Expanded(
           child: bookmarks.isEmpty
-              ? const Center(child: Text("Belum ada berita yang disimpan offline."))
+              ? const Center(
+                  child: Text(
+                    "Belum ada berita yang disimpan offline.",
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                )
               : ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: bookmarks.length,
@@ -45,7 +50,23 @@ class NewsBookmarksPage extends StatelessWidget {
                         children: [
                           ClipRRect(
                             borderRadius: BorderRadius.circular(8),
-                            child: Image.network(item.imageUrl, width: double.infinity, height: 160, fit: BoxFit.cover),
+                            child: Image.network(
+                              item.imageUrl, 
+                              width: double.infinity, 
+                              height: 160, 
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                // Fallback jika link gambar rusak atau gagal dimuat saat offline
+                                return Container(
+                                  width: double.infinity,
+                                  height: 160,
+                                  color: Colors.grey.shade200,
+                                  child: const Center(
+                                    child: Icon(Icons.broken_image, color: Colors.grey),
+                                  ),
+                                );
+                              },
+                            ),
                           ),
                           const SizedBox(height: 8),
                           Text(
@@ -58,9 +79,16 @@ class NewsBookmarksPage extends StatelessWidget {
                             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 6),
-                          Text(
-                            "⏱️ ${item.readingTimeMinutes} min baca  •  ${item.timeAgo}",
-                            style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+                          // Menggunakan Material Icon asli agar tampilan lebih konsisten di semua device
+                          Row(
+                            children: [
+                              Icon(Icons.access_time, size: 12, color: Colors.grey.shade600),
+                              const SizedBox(width: 4),
+                              Text(
+                                "${item.readingTimeMinutes} min baca  •  ${item.timeAgo}",
+                                style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+                              ),
+                            ],
                           ),
                         ],
                       ),
