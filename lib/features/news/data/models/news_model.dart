@@ -1,40 +1,39 @@
 import 'package:isar/isar.dart';
 import '../../domain/entities/news_entity.dart';
 
-// Menandakan bahwa kelas ini akan digenerasikan menjadi skrip Isar kustom (.g.dart)
 part 'news_model.g.dart';
 
 @collection
 class NewsModel {
-  // Id lokal Isar otomatis
   Id id = Isar.autoIncrement;
 
   late int newsId;
   late String title;
-  late String content;
+  
+  // Mengubah beberapa field menjadi nullable karena data dari API sering kosong
+  String? content;
   late String category;
-  late String imageUrl;
+  String? imageUrl;
   late String timeAgo;
-  late String author;
+  String? author;
   late int readingTimeMinutes;
   late bool isBookmarked;
 
-  // Mengubah data dari Isar Model kembali ke Entitas murni Domain
   NewsEntity toEntity() {
     return NewsEntity(
       id: newsId,
       title: title,
-      content: content,
+      // Berikan fallback string kosong di sini jika NewsEntity kamu mewajibkan non-nullable
+      content: content ?? 'Tidak ada deskripsi.', 
       category: category,
-      imageUrl: imageUrl,
+      imageUrl: imageUrl ?? 'https://picsum.photos/600/400',
       timeAgo: timeAgo,
-      author: author,
+      author: author ?? 'Unknown',
       readingTimeMinutes: readingTimeMinutes,
       isBookmarked: isBookmarked,
     );
   }
 
-  // Membuat Isar Model baru berdasarkan cetakan data dari Entitas Domain
   static NewsModel fromEntity(NewsEntity entity) {
     return NewsModel()
       ..newsId = entity.id

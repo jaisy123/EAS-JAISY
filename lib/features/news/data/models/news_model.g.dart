@@ -83,10 +83,25 @@ int _newsModelEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
-  bytesCount += 3 + object.author.length * 3;
+  {
+    final value = object.author;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.category.length * 3;
-  bytesCount += 3 + object.content.length * 3;
-  bytesCount += 3 + object.imageUrl.length * 3;
+  {
+    final value = object.content;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.imageUrl;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.timeAgo.length * 3;
   bytesCount += 3 + object.title.length * 3;
   return bytesCount;
@@ -116,11 +131,11 @@ NewsModel _newsModelDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = NewsModel();
-  object.author = reader.readString(offsets[0]);
+  object.author = reader.readStringOrNull(offsets[0]);
   object.category = reader.readString(offsets[1]);
-  object.content = reader.readString(offsets[2]);
+  object.content = reader.readStringOrNull(offsets[2]);
   object.id = id;
-  object.imageUrl = reader.readString(offsets[3]);
+  object.imageUrl = reader.readStringOrNull(offsets[3]);
   object.isBookmarked = reader.readBool(offsets[4]);
   object.newsId = reader.readLong(offsets[5]);
   object.readingTimeMinutes = reader.readLong(offsets[6]);
@@ -137,13 +152,13 @@ P _newsModelDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 1:
       return (reader.readString(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 3:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 4:
       return (reader.readBool(offset)) as P;
     case 5:
@@ -250,8 +265,24 @@ extension NewsModelQueryWhere
 
 extension NewsModelQueryFilter
     on QueryBuilder<NewsModel, NewsModel, QFilterCondition> {
+  QueryBuilder<NewsModel, NewsModel, QAfterFilterCondition> authorIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'author',
+      ));
+    });
+  }
+
+  QueryBuilder<NewsModel, NewsModel, QAfterFilterCondition> authorIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'author',
+      ));
+    });
+  }
+
   QueryBuilder<NewsModel, NewsModel, QAfterFilterCondition> authorEqualTo(
-    String value, {
+    String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -264,7 +295,7 @@ extension NewsModelQueryFilter
   }
 
   QueryBuilder<NewsModel, NewsModel, QAfterFilterCondition> authorGreaterThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -279,7 +310,7 @@ extension NewsModelQueryFilter
   }
 
   QueryBuilder<NewsModel, NewsModel, QAfterFilterCondition> authorLessThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -294,8 +325,8 @@ extension NewsModelQueryFilter
   }
 
   QueryBuilder<NewsModel, NewsModel, QAfterFilterCondition> authorBetween(
-    String lower,
-    String upper, {
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -511,8 +542,24 @@ extension NewsModelQueryFilter
     });
   }
 
+  QueryBuilder<NewsModel, NewsModel, QAfterFilterCondition> contentIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'content',
+      ));
+    });
+  }
+
+  QueryBuilder<NewsModel, NewsModel, QAfterFilterCondition> contentIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'content',
+      ));
+    });
+  }
+
   QueryBuilder<NewsModel, NewsModel, QAfterFilterCondition> contentEqualTo(
-    String value, {
+    String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -525,7 +572,7 @@ extension NewsModelQueryFilter
   }
 
   QueryBuilder<NewsModel, NewsModel, QAfterFilterCondition> contentGreaterThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -540,7 +587,7 @@ extension NewsModelQueryFilter
   }
 
   QueryBuilder<NewsModel, NewsModel, QAfterFilterCondition> contentLessThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -555,8 +602,8 @@ extension NewsModelQueryFilter
   }
 
   QueryBuilder<NewsModel, NewsModel, QAfterFilterCondition> contentBetween(
-    String lower,
-    String upper, {
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -695,8 +742,25 @@ extension NewsModelQueryFilter
     });
   }
 
+  QueryBuilder<NewsModel, NewsModel, QAfterFilterCondition> imageUrlIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'imageUrl',
+      ));
+    });
+  }
+
+  QueryBuilder<NewsModel, NewsModel, QAfterFilterCondition>
+      imageUrlIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'imageUrl',
+      ));
+    });
+  }
+
   QueryBuilder<NewsModel, NewsModel, QAfterFilterCondition> imageUrlEqualTo(
-    String value, {
+    String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -709,7 +773,7 @@ extension NewsModelQueryFilter
   }
 
   QueryBuilder<NewsModel, NewsModel, QAfterFilterCondition> imageUrlGreaterThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -724,7 +788,7 @@ extension NewsModelQueryFilter
   }
 
   QueryBuilder<NewsModel, NewsModel, QAfterFilterCondition> imageUrlLessThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -739,8 +803,8 @@ extension NewsModelQueryFilter
   }
 
   QueryBuilder<NewsModel, NewsModel, QAfterFilterCondition> imageUrlBetween(
-    String lower,
-    String upper, {
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -1519,7 +1583,7 @@ extension NewsModelQueryProperty
     });
   }
 
-  QueryBuilder<NewsModel, String, QQueryOperations> authorProperty() {
+  QueryBuilder<NewsModel, String?, QQueryOperations> authorProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'author');
     });
@@ -1531,13 +1595,13 @@ extension NewsModelQueryProperty
     });
   }
 
-  QueryBuilder<NewsModel, String, QQueryOperations> contentProperty() {
+  QueryBuilder<NewsModel, String?, QQueryOperations> contentProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'content');
     });
   }
 
-  QueryBuilder<NewsModel, String, QQueryOperations> imageUrlProperty() {
+  QueryBuilder<NewsModel, String?, QQueryOperations> imageUrlProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'imageUrl');
     });

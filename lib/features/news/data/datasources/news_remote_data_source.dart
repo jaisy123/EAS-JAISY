@@ -13,33 +13,54 @@ class NewsRemoteDataSourceImpl implements NewsRemoteDataSource {
 
   @override
   Future<List<NewsModel>> getRemoteNews() async {
-    // Menggunakan API Berita Indonesia Terbuka (Bisa diganti URL API pilihanmu)
-    final url = Uri.parse('https://api-berita-indonesia.vercel.noocandle.com/cnn/nasional/');
+    final url = Uri.parse(
+      'https://newsapi.org/v2/top-headlines?country=id&apiKey=e8c8118de54f49979c0fa9babe4edb7a'
+    );
     
-    final response = await client.get(url);
+    try {
+      // Menambahkan User-Agent agar tidak diblokir oleh NewsAPI
+      final response = await client.get(
+        url,
+        headers: {
+          'User-Agent': 'Flutter-News-App',
+          'Accept': 'application/json',
+        },
+      );
 
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> data = json.decode(response.body);
-      final List<dynamic> articles = data['data']['posts'];
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        final List<dynamic> articles = data['articles'] ?? [];
 
-      // Mapping hasil JSON API ke dalam Isar NewsModel
-      return articles.asMap().entries.map((entry) {
-        int index = entry.key;
-        var article = entry.value;
-        
-        return NewsModel()
-          ..newsId = index + 1
-          ..title = article['title'] ?? 'Tanpa Judul'
-          ..content = article['description'] ?? 'Tidak ada deskripsi.'
-          ..category = "NASIONAL"
-          ..imageUrl = article['thumbnail'] ?? 'https://picsum.photos/600/400'
-          ..timeAgo = article['pubDate'] ?? 'Baru saja'
-          ..author = "CNN Indonesia"
-          ..readingTimeMinutes = 5
-          ..isBookmarked = false;
-      }).toList();
-    } else {
-      throw Exception('Gagal mengambil data dari API');
+        return articles.asMap().entries.map((entry) {
+          int index = entry.key;
+          var article = entry.value;
+          
+          String sourceName = "NewsAPI";
+          if (article['source'] != null && article['source']['name'] != null) {
+            sourceName = article['source']['name'];
+          }
+          
+          return NewsModel()
+            ..newsId = index + 1
+            ..title = article['title'] ?? 'Tanpa Judul'
+            // Fleksibel: mengambil description, jika null ambil content
+            ..content = article['description'] ?? article['content'] ?? 'Tidak ada deskripsi.'
+            ..category = "TOP HEADLINES"
+            ..imageUrl = article['urlToImage'] ?? 'https://picsum.photos/600/400'
+            ..timeAgo = article['publishedAt'] ?? 'Baru saja'
+            ..author = sourceName
+            ..readingTimeMinutes = 5
+            ..isBookmarked = false;
+        }).toList();
+      } else {
+        // Mengurai error response dari NewsAPI (jika ada pesan spesifik seperti apiKeyInvalid)
+        final Map<String, dynamic> errorData = json.decode(response.body);
+        final String errorMessage = errorData['message'] ?? 'Gagal mengambil data dari NewsAPI.org';
+        throw Exception('$errorMessage (Status: ${response.statusCode})');
+      }
+    } catch (e) {
+      // Menangkap error jaringan atau parsing data
+      throw Exception('Terjadi kesalahan saat mengambil berita: $e');
     }
   }
 }

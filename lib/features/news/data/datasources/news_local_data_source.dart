@@ -15,25 +15,27 @@ class NewsLocalDataSourceImpl implements NewsLocalDataSource {
 
   @override
   Future<List<NewsModel>> getCachedNews() async {
-    // Mengambil seluruh berita utama yang tersimpan di memori lokal
     return await isar.newsModels.where().findAll();
   }
 
   @override
   Future<List<NewsModel>> getBookmarkedNews() async {
-    // Hanya mengambil berita yang benderanya ditandai isBookmarked = true
     return await isar.newsModels.filter().isBookmarkedEqualTo(true).findAll();
   }
 
   @override
   Future<void> cacheNews(List<NewsModel> newsList) async {
-    // Menyimpan atau memperbarui data berita utama ke dalam database lokal Isar
     await isar.writeTxn(() async {
       for (var news in newsList) {
         final existing = await isar.newsModels.filter().newsIdEqualTo(news.newsId).findFirst();
+        
         if (existing != null) {
-          news.id = existing.id; // Pertahankan id internal Isar agar tidak duplikat
+          news.id = existing.id; // Proteksi agar ID tidak duplikat
+          
+          // SOLUSI: Pertahankan status bookmark yang sudah diatur oleh pengguna di lokal
+          news.isBookmarked = existing.isBookmarked;
         }
+        
         await isar.newsModels.put(news);
       }
     });
@@ -41,7 +43,6 @@ class NewsLocalDataSourceImpl implements NewsLocalDataSource {
 
   @override
   Future<void> toggleBookmark(int newsId) async {
-    // Mengubah status simpan offline berita (jika ada diputus, jika tidak ada disimpan)
     await isar.writeTxn(() async {
       final news = await isar.newsModels.filter().newsIdEqualTo(newsId).findFirst();
       if (news != null) {
