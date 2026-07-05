@@ -36,7 +36,7 @@ class NewsHomePage extends StatelessWidget {
               image: DecorationImage(
                 image: NetworkImage(headline.imageUrl),
                 fit: BoxFit.cover,
-                colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.6), BlendMode.darken),
+                colorFilter: ColorFilter.mode(Colors.black.withValues(alpha: 0.6), BlendMode.darken),
               ),
             ),
             padding: const EdgeInsets.all(16),
