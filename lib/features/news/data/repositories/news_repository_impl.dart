@@ -1,22 +1,35 @@
 import '../../domain/repositories/news_repository.dart';
 import '../../domain/entities/news_entity.dart';
 import '../datasources/news_local_data_source.dart';
+import '../datasources/news_remote_data_source.dart';
 import '../models/news_model.dart';
 
 class NewsRepositoryImpl implements NewsRepository {
   final NewsLocalDataSource localDataSource;
+  final NewsRemoteDataSource remoteDataSource; // Tambah remote data source
 
-  NewsRepositoryImpl({required this.localDataSource});
+  NewsRepositoryImpl({
+    required this.localDataSource,
+    required this.remoteDataSource,
+  });
 
   @override
   Future<List<NewsEntity>> getNewsList() async {
+    try {
+      // 1. Ambil data terbaru dari API internet
+      final remoteNews = await remoteDataSource.getRemoteNews();
+      
+      // 2. Simpan hasil API ke database lokal Isar
+      await localDataSource.cacheNews(remoteNews);
+    } catch (_) {
+      // Jika internet putus/gagal, aplikasi tidak akan crash, melainkan lanjut membaca cache Isar
+    }
+
+    // 3. Ambil data dari lokal Isar untuk ditampilkan ke UI
     final models = await localDataSource.getCachedNews();
-    
-    // Konversi Isar Model ke murni Domain Entity
     final entities = models.map((model) => model.toEntity()).toList();
     
-    // ATURAN ANTI-AI CHALLENGE (NPM GENAP - 66): 
-    // Mengurutkan berita secara alfabetis normal dari A sampai Z berdasarkan Judul Berita
+    // ATURAN NPM GENAP (66): Urutkan alfabetis normal A-Z berdasarkan Judul
     entities.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
     
     return entities;
