@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Wajib ditambahkan untuk memanggil MethodChannel
+import 'package:flutter/services.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -12,19 +12,18 @@ class _ProfilePageState extends State<ProfilePage> {
   final String _originalNpm = "20123066";
   final String _email = "jaisy.20123066@utdi.ac.id";
   
-  // Inisialisasi jembatan udara ke Kotlin (Harus sama persis dengan yang di MainActivity.kt)
   static const _platform = MethodChannel('com.jaisy.eas/npm');
   
-  String _reversedNpmFromNative = "Memuat..."; // Tempat menampung hasil dari Kotlin
+  String _reversedNpmFromNative = "Memuat..."; 
   int _profileTapCount = 0;
 
   @override
   void initState() {
-    super.override();
-    _fetchNpmFromNative(); // Jalankan pemanggilan native saat halaman dibuka
+    // PERBAIKAN 1: Memperbaiki panggilan super yang benar dari super.override() ke super.initState()
+    super.initState();
+    _fetchNpmFromNative(); 
   }
 
-  // Fungsi memanggil fungsi reverse di Kotlin secara asynchronous
   Future<void> _fetchNpmFromNative() async {
     try {
       final String result = await _platform.invokeMethod('reverseNpmNative', {
@@ -131,14 +130,13 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
               const SizedBox(height: 16),
+              // PERBAIKAN 2: Mengubah textAlign: Center menjadi TextAlign.center yang sah
               const Text(
                 "Muhamad Jaisy Hisbulloh",
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A)),
-                textAlign: Center,
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 4),
-              
-              // Menampilkan data yang ditarik murni dari mesin MainActivity.kt
               Text(
                 "NPM Terbalik (Native): $_reversedNpmFromNative",
                 style: const TextStyle(color: Color(0xFFC2410C), fontSize: 14, fontWeight: FontWeight.bold),

@@ -20,14 +20,27 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.eas_mpl_jaisy"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+    }
+
+    // 1. TENTUKAN DIMENSI FLAVOR (Sintaks Kotlin DSL)
+    flavorDimensions.add("default")
+
+    // 2. DAFTARKAN FLAVOR DEV DAN PROD (Sintaks Kotlin DSL)
+    productFlavors {
+        create("dev") {
+            dimension = "default"
+            applicationIdSuffix = ".dev" // Menghasilkan: com.example.eas_mpl_jaisy.dev
+            resValue("string", "app_name", "DigiNews [DEV]")
+        }
+        create("prod") {
+            dimension = "default"
+            resValue("string", "app_name", "DigiNews")
+        }
     }
 
     buildTypes {
